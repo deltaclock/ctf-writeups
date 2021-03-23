@@ -2,7 +2,7 @@
 description: Mixed
 ---
 
-# Securinets CTF Quals 2021- Mixed
+# Securinets CTF Quals 2021 - Mixed
 
 ## The Challenge Environment
 
@@ -85,7 +85,7 @@ We needed to find a way to trigger the vulnerability described in the blog while
 shttp://api.prodnotes.bb:5000/../../../../../../../../../../etc/passwd
 ```
 
-Testing it locally in the previous PHP script, it works!
+Testing it locally in the previous PHP script, it works!!
 
 ### RCE
 
