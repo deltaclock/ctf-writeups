@@ -29,15 +29,15 @@ Finally there was also a bot that we could submit URLs to at `/reg.php`. This bo
 
 Here we will explain a bit the thought process of how we ended up discovering _all?_ of the bugs rather than just going directly to them. Move to the next section to read directly the vulnerabilities.
 
-Visiting the website for the first time we are meet with a login form. As we don't have a user yet we try to register but the website is redirecting us back to the index page. We see in the `login_query.php` file that the login process is not vulnerable to SQLi but while digging thought the rest of the code, we cannot find any code that will insert a user to the database, thus registering a new user seems pretty impossible now.
+Visiting the website for the first time we are meet with a login form. As we don't have a user yet we try to register but the website is redirecting us back to the index page. We see in the `login_query.php` file that the login process is not vulnerable to SQLi but while digging through the rest of the code, we cannot find anything that will insert a user to the database, thus registering a new user seems pretty impossible now.
 
-The only thing that could be used to login is the functionality in `passwordchange.php` which also doesn't have any CSRF protection. We know there is an admin bot which is very likely to be logged in to the website, so we only need to send a link with some JavaScript payload in it that will make a request to the `passwordchange.php` and change the password to anything we want. After that we can login using our new credentials. Unfortunately as we said earlier this is not needed as the author forgot to include the `exit` keyword to the top of both `home.php` and `get.php` after the session start, this means login-ing in is not necessary to proceed to the next step. From our understanding the the encrypt and decrypt functionality found on those pages and on the Flask API was also meant to prevent CSRF, so we can ignore it from now on.
+The only thing that could be used to login is the functionality in `passwordchange.php` which also doesn't have any CSRF protection. We know there is an admin bot which is very likely to be logged in to the website, so we only need to send a link with some JavaScript payload in it that will make a request to the `passwordchange.php` and change the password to anything we want. After that we can login using our new credentials. Unfortunately as we said earlier this is not needed as the author forgot to include the `exit` keyword to the top of both `home.php` and `get.php` after the session start, this means loging in is not necessary to proceed to the next step. From our understanding the encrypt and decrypt functionality found on those pages and on the Flask API was also meant to prevent CSRF, so we can ignore it from now on.
 
 After that we went on to explore the note taking aspect of the challenge. The Flask API contained 2 endpoints, one that can be used to insert a note to the sqlite database `/add_note` and another that can be used to read the available notes at `/get_note` . Logically we first tried to create one note of our own and then read it, as that was working fine we thought maybe there is some hidden note that we should read. We made a quick script to bruteforce all the notes while working on understanding the code more. In the end our script found nothing really interesting.
 
-Subsequently we thought that maybe the flag is on the admin cookies or on the admin page since there was a XSS payload in the dummy sqlite database given in the downloadable. After some time we concluded this was impossible to do, escaping the rabbit hole.
+Subsequently we thought that maybe the flag is on the admin cookies or on the admin page since there was a XSS payload in the dummy sqlite database given in the downloadable. After some time we concluded this was impossible to do, escaping the rabbit hole :\).
 
-Taking some time to find what to do next we concluded that the flag will probably stored on the filesystem as a file.
+Taking some time to find what to do next we concluded that the flag will probably be stored on the filesystem.
 
 ## Vulnerabilities
 
@@ -63,7 +63,7 @@ $file = file_get_contents($url, false, $context);
 echo $file;
 ```
 
-Hopefully PHP here reads `/etc/passwd` just fine. The problem is now that the challenge doesnt let us just supply any URL we want, we need to bypass the check function.
+Hopefully PHP here reads `/etc/passwd` just fine. The problem is now that the challenge doesn't let us just supply any URL we want, we need to bypass the check function.
 
 ```php
 function check($url){
@@ -77,9 +77,9 @@ function check($url){
 }
 ```
 
-We notice something weird this this function, while it check exactly that the host and port will match the local Flask API `api.prodnotes.bb:5000` , the scheme part of the URL is check that it **contains** the string `http` . Did some googling and found out [this](https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/) very interesting blog describing a very similar scenario to the one we face. Reading carefully the blog we see that while the payload works as verified locally, it doesn't parse the **host** value.
+We notice something weird this this function, while it checks exactly that the host and port will match the local Flask API `api.prodnotes.bb:5000` , the scheme part of the URL is checking that it **contains** the string `http` . We know there must be some bug in `parse_url` so we did some googling and found out [this](https://blog.theo.com.tw/Research/PHP-The-issue-between-parse-url-and-real-path/) very interesting blog describing a very similar scenario to the one we face. Reading carefully the blog we see that while the payload works as verified locally, it doesn't parse the **host** value.
 
-We needed to find a way to trigger the vulnerability described in the blog while also tricking the `parse_url` . After many many tries we realized the `\\` are not really necessary but the big realization was that the check function only needs the scheme to contain `http` meaning a scheme of `shttp` would pass the check just fine!
+We needed to find a way to trigger the vulnerability described in the blog while also tricking the `parse_url` . After many many tries we realized the `\\` are not really necessary but the big realization was that the check function only needs the scheme to **contain** `http` meaning a scheme of `shttp` would pass the check just fine!!
 
 ```http
 shttp://api.prodnotes.bb:5000/../../../../../../../../../../etc/passwd
@@ -93,7 +93,7 @@ After trying many common flag locations we realized we needed to go one step fur
 
 #### Flask debug mode
 
-Looking at the Flask code we can see its running with debug mode specifically enabled, which means that the **werkzeug** debug console is enabled. We can easily check if we have access to it by just changing the `endpoint` parameter of a POST request to `/get.php` from `/add_note` to `/console` , surely enough we get back the werkzeug console html.
+Looking at the Flask code we can see its running with debug mode specifically enabled, which means that the **werkzeug** debug console is enabled. We can easily check if we have access to it by just changing the `endpoint` parameter of a POST request to `/get.php` from `/get_note` to `/console` , surely enough we get back the werkzeug console html.
 
 ![/console](.gitbook/assets/image.png)
 
@@ -114,9 +114,9 @@ probably_public_bits = [
 
 The first 3 items were easy to guess, the 4th took some tedious trial and error until we found it.
 
-Moving to the `private_bits` lists we first need the MAC address of the default interface which we can find by reading the file `/proc/net/route` and then based on the interface name, on our case, `/sys/class/net/eth0/address`. Secondly we need the private machine id, we wasted some time reading and calculating the pin based on the `/etc/machine-id` and `/proc/sys/kernel/random/boot_id` without realizing like the blog said, that on some newer werkzeug versions a new random id is used and that is found in `/proc/self/cgroup` .
+Moving to the `private_bits` lists we first need the MAC address of the default interface which we can find by reading the file `/proc/net/route` and then based on the interface name read the suitable file, on our case, `/sys/class/net/eth0/address`. Secondly we need the private machine id, we wasted some time reading and calculating the pin based on the `/etc/machine-id` and `/proc/sys/kernel/random/boot_id` without realizing like the blog said, that on some newer werkzeug versions a new random id is used and that is found in `/proc/self/cgroup` . This was [CVE-2019-14806](https://nvd.nist.gov/vuln/detail/CVE-2019-14806).
 
-We can verify our version is using the cgroup variant by reading the file `/usr/lib/python3/dist-packages/werkzeug/debug/__init__.py` . There we can also find the last piece of the puzzle which is the `hash_pin` function. The pin we got is `160-338-026` 
+We can verify our version is using the cgroup variant by reading the file `/usr/lib/python3/dist-packages/werkzeug/debug/__init__.py` . There we can also find the last piece of the puzzle which is the `hash_pin` function. The pin we got from all this is `160-338-026` 
 
 #### Header Injection
 
@@ -130,7 +130,7 @@ The cookie value there is in the form:
 f"__wzd{hexdigest}={int(time.time())|{hash_pin(pin)}"
 ```
 
-The cookie key name can be found in the same code that generated the pin and the `hash_pin` function we extracted is:
+The cookie key name can be found in the same code that [generated](https://github.com/pallets/werkzeug/blob/master/src/werkzeug/debug/__init__.py#L188) the pin and the `hash_pin` function we extracted is:
 
 ```python
 def hash_pin(pin):
