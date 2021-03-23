@@ -23,7 +23,7 @@ $file = file_get_contents($url, false, $context);
 echo $file;
 ```
 
-Finally there was also a bot that we could submit URLs to at `/reg.php`. This bot was a source of great confusion at first by us and probably other players. As it turns out the bot was not an essential part of the challenge and we will touch a bit more on that later.
+Finally there was also a bot that we could submit URLs to at `/reg.php`. This bot was a source of great confusion at first for us and probably other players. As it turns out the bot was not an essential part of the challenge and we will touch a bit more on that later.
 
 ## Exploring The Codebase
 
@@ -95,7 +95,7 @@ After trying many common flag locations we realized we needed to go one step fur
 
 Looking at the Flask code we can see its running with debug mode specifically enabled, which means that the **werkzeug** debug console is enabled. We can easily check if we have access to it by just changing the `endpoint` parameter of a POST request to `/get.php` from `/add_note` to `/console` , surely enough we get back the werkzeug console html.
 
-![/console](.gitbook/assets/image%20%282%29.png)
+![/console](.gitbook/assets/image.png)
 
 #### Calculating the PIN
 
@@ -122,7 +122,7 @@ We can verify our version is using the cgroup variant by reading the file `/usr/
 
 While the PIN we got is probably correct, it is not enough as is, to get RCE. We need to create the werkzeug cookie header. Below is a typical console debug request.
 
-![Local flask debug server](.gitbook/assets/image%20%283%29.png)
+![Local flask debug server](.gitbook/assets/image%20%281%29.png)
 
 The cookie value there is in the form:
 
@@ -145,7 +145,7 @@ Now all we need to do is just inject this cookie header into the `cook=` post pa
 /console?__debugger__=yes&cmd=print(1337)&frm=0&s=xOGQOt4mS7oDWEs8P5AT 
 ```
 
-![The final payload](.gitbook/assets/image%20%284%29.png)
+![The final payload](.gitbook/assets/image%20%282%29.png)
 
 ## Attributions
 
