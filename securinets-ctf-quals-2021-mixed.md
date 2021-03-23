@@ -23,7 +23,7 @@ $file = file_get_contents($url, false, $context);
 echo $file;
 ```
 
-Finally there was also a bot that we could submit URLs to at `/reg.php`. This bot was a source of great confusion at first for us and probably other players. As it turns out the bot was not an essential part of the challenge and we will touch a bit more on that later.
+Finally there was also a bot that we could submit URLs to at `/req.php`. This bot was a source of great confusion at first for us and probably other players. As it turns out the bot was not an essential part of the challenge and we will touch a bit more on that later.
 
 ## Exploring The Codebase
 
