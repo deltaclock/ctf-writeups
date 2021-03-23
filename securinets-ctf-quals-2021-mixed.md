@@ -149,7 +149,7 @@ Now all we need to do is just inject this cookie header into the `cook=` post pa
 
 ## Attributions
 
-This challenge was solved along with @[makelariss](https://twitter.com/makelariss) and @[makelarisjr](https://twitter.com/makelarisjr).
+This challenge was solved along with @[makelariss](https://twitter.com/makelariss) and @[makelarisjr](https://twitter.com/makelarisjr) for our ctf team @[greunion](https://twitter.com/greunion_ctf).
 
 ### References
 
