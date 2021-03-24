@@ -101,7 +101,7 @@ Looking at the Flask code we can see its running with debug mode specifically en
 
 We can see it requires a pin in order to let us execute python code. Luckily there are plenty of blogs out there that describe the process of calculating this pin, the best one we found was [this](https://lactea.kr/entry/python-flask-debugger-pin-find-and-exploit).
 
-To generate this we need 2 lists of data, our `probably_public_bits` turned out like this:
+To generate the pin we need 2 lists of data, our `probably_public_bits` turned out like this:
 
 ```python
 probably_public_bits = [
@@ -112,11 +112,11 @@ probably_public_bits = [
 ]
 ```
 
-The first 3 items were easy to guess, the 4th took some tedious trial and error until we found it.
+The first 3 items were easy to guess, the 4th took some tedious trial and error until we found it, it's the full path to the Flask source `app.py` .
 
 Moving to the `private_bits` lists we first need the MAC address of the default interface which we can find by reading the file `/proc/net/route` and then based on the interface name read the suitable file, on our case, `/sys/class/net/eth0/address`. Secondly we need the private machine id, we wasted some time reading and calculating the pin based on the `/etc/machine-id` and `/proc/sys/kernel/random/boot_id` without realizing like the blog said, that on some newer werkzeug versions a new random id is used and that is found in `/proc/self/cgroup` . This was [CVE-2019-14806](https://nvd.nist.gov/vuln/detail/CVE-2019-14806).
 
-We can verify our version is using the cgroup variant by reading the file `/usr/lib/python3/dist-packages/werkzeug/debug/__init__.py` . There we can also find the last piece of the puzzle which is the `hash_pin` function. The pin we got from all this is `160-338-026` 
+We can verify our version is using the cgroup variant by reading the file `/usr/lib/python3/dist-packages/werkzeug/debug/__init__.py` . There we can also find the last piece of the puzzle which is the `hash_pin` function. The pin we got from all this is `160-338-026` after modifying [this](https://github.com/pallets/werkzeug/blob/master/src/werkzeug/debug/__init__.py#L126) function with our own data.
 
 #### Header Injection
 
@@ -130,7 +130,7 @@ The cookie value there is in the form:
 f"__wzd{hexdigest}={int(time.time())|{hash_pin(pin)}"
 ```
 
-The cookie key name can be found in the same code that [generated](https://github.com/pallets/werkzeug/blob/master/src/werkzeug/debug/__init__.py#L188) the pin and the `hash_pin` function we extracted is:
+The cookie key name can be found in the same code that [generated](https://github.com/pallets/werkzeug/blob/master/src/werkzeug/debug/__init__.py#L188) the pin and the `hash_pin` function we extracted previously is:
 
 ```python
 def hash_pin(pin):
@@ -143,6 +143,12 @@ Now all we need to do is just inject this cookie header into the `cook=` post pa
 
 ```text
 /console?__debugger__=yes&cmd=print(1337)&frm=0&s=xOGQOt4mS7oDWEs8P5AT 
+```
+
+And the final cookie:
+
+```http
+__wzda68506e337031e3a0db6=1616590113|446c76978e3f
 ```
 
 ![The final payload](.gitbook/assets/image%20%282%29.png)
