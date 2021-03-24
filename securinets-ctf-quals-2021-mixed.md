@@ -35,7 +35,7 @@ The only thing that could be used to login is the functionality in `passwordchan
 
 After that we went on to explore the note taking aspect of the challenge. The Flask API contained 2 endpoints, one that can be used to insert a note to the sqlite database `/add_note` and another that can be used to read the available notes at `/get_note` . Logically we first tried to create one note of our own and then read it, as that was working fine we thought maybe there is some hidden note that we should read. We made a quick script to bruteforce all the notes while working on understanding the code more. In the end our script found nothing really interesting.
 
-Subsequently we thought that maybe the flag is on the admin cookies or on the admin page since there was a XSS payload in the dummy sqlite database given in the downloadable. After some time we concluded this was impossible to do, escaping the rabbit hole :\).
+Subsequently we thought that maybe the flag is on the admin cookies or on the admin page since there was a XSS payload in the dummy sqlite database given in the downloadable. After some time we concluded this was not the case, escaping the rabbit hole :\). The bot only there for the password change.
 
 Taking some time to find what to do next we concluded that the flag will probably be stored on the filesystem.
 
