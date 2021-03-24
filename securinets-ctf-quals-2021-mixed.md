@@ -85,7 +85,7 @@ We needed to find a way to trigger the vulnerability described in the blog while
 shttp://api.prodnotes.bb:5000/../../../../../../../../../../etc/passwd
 ```
 
-Testing it locally in the previous PHP script, it works!!
+Testing it locally in the previous PHP script, it works!! This is because `shttp` is not a valid scheme and thus `file_get_contents` thinks it's just part of the filepath while `parse_url` thinks its just a weird scheme unknown to it, but with a valid host and port!
 
 ### RCE
 
